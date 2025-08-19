@@ -1,0 +1,126 @@
+
+import React, { useState, useEffect } from "react";
+import { Song } from "@/entities/all";
+import { Search as SearchIcon } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { usePlayer } from "../components/player/PlayerContext";
+
+import SearchResults from "../components/search/SearchResults";
+import TrendingSearches from "../components/search/TrendingSearches";
+import RecentSearches from "../components/search/RecentSearches";
+
+export default function Search() {
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState([]);
+  const [allSongs, setAllSongs] = useState([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const [recentSearches, setRecentSearches] = useState([]);
+  const { playSong, currentSong, isPlaying } = usePlayer();
+
+  useEffect(() => {
+    loadAllSongs();
+    loadRecentSearches();
+  }, []);
+
+  useEffect(() => {
+    if (searchQuery.trim()) {
+      performSearch();
+    } else {
+      setSearchResults([]);
+    }
+  }, [searchQuery, allSongs]);
+
+  const loadAllSongs = async () => {
+    try {
+      const songs = await Song.list();
+      setAllSongs(songs);
+    } catch (error) {
+      console.error("Error loading songs:", error);
+    }
+  };
+
+  const loadRecentSearches = () => {
+    const stored = localStorage.getItem("recent_searches");
+    if (stored) {
+      setRecentSearches(JSON.parse(stored));
+    }
+  };
+
+  const performSearch = () => {
+    setIsSearching(true);
+
+    const filtered = allSongs.filter(song =>
+      song.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      song.artist?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      song.album?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      song.genre?.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+
+    setSearchResults(filtered);
+    setIsSearching(false);
+  };
+
+  const handleSearch = (query) => {
+    setSearchQuery(query);
+
+    if (query.trim() && !recentSearches.includes(query)) {
+      const updated = [query, ...recentSearches.slice(0, 9)];
+      setRecentSearches(updated);
+      localStorage.setItem("recent_searches", JSON.stringify(updated));
+    }
+  };
+
+  const handlePlaySong = (song) => {
+    playSong(song, searchResults);
+  };
+
+  const clearRecentSearches = () => {
+    setRecentSearches([]);
+    localStorage.removeItem("recent_searches");
+  };
+
+  return (
+    <div className="p-6">
+      {/* Search Header */}
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold mb-6">Search</h1>
+        <div className="relative max-w-xl">
+          <SearchIcon className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+          <Input
+            placeholder="What do you want to listen to?"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            onKeyPress={(e) => {
+              if (e.key === 'Enter') {
+                handleSearch(searchQuery);
+              }
+            }}
+            className="pl-12 h-12 text-lg glass-effect border-white/10 bg-white/5"
+          />
+        </div>
+      </div>
+
+      {searchQuery.trim() ? (
+        <SearchResults
+          query={searchQuery}
+          results={searchResults}
+          isSearching={isSearching}
+          onPlaySong={handlePlaySong}
+          currentSong={currentSong}
+          isPlaying={isPlaying}
+        />
+      ) : (
+        <div className="space-y-8">
+          {recentSearches.length > 0 && (
+            <RecentSearches
+              searches={recentSearches}
+              onSearchClick={handleSearch}
+              onClear={clearRecentSearches}
+            />
+          )}
+          <TrendingSearches onSearchClick={handleSearch} />
+        </div>
+      )}
+    </div>
+  );
+}

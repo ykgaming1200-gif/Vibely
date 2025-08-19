@@ -1,0 +1,41 @@
+import React from "react";
+import { Play, Pause } from "lucide-react";
+import { Button } from "@/components/ui/button";
+
+export default function FeaturedSection({ songs, onPlaySong, currentSong, isPlaying }) {
+  const featuredSong = songs[0];
+
+  if (!featuredSong) return null;
+
+  return (
+    <div className="relative overflow-hidden rounded-2xl glass-effect p-8 mb-8">
+      <div className="absolute inset-0 bg-gradient-to-r from-purple-900/50 to-pink-900/50 opacity-80" />
+      <div className="relative z-10 flex items-center gap-8">
+        <div className="w-32 h-32 rounded-xl bg-gradient-to-br from-purple-600 to-pink-600 flex items-center justify-center text-4xl glow-purple">
+          🎵
+        </div>
+        <div className="flex-1">
+          <p className="text-purple-300 text-sm font-medium mb-2">FEATURED TRACK</p>
+          <h3 className="text-3xl font-bold mb-2">{featuredSong.title}</h3>
+          <p className="text-gray-300 text-lg mb-4">{featuredSong.artist}</p>
+          <Button
+            onClick={() => onPlaySong(featuredSong)}
+            className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 rounded-full px-8 py-3 glow-purple"
+          >
+            {currentSong?.id === featuredSong.id && isPlaying ? (
+              <>
+                <Pause className="w-5 h-5 mr-2" />
+                Pause
+              </>
+            ) : (
+              <>
+                <Play className="w-5 h-5 mr-2 ml-1" />
+                Play Now
+              </>
+            )}
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+}

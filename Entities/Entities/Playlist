@@ -1,0 +1,33 @@
+{
+  "name": "Playlist",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Playlist name"
+    },
+    "description": {
+      "type": "string",
+      "description": "Playlist description"
+    },
+    "cover_url": {
+      "type": "string",
+      "description": "URL to playlist cover image"
+    },
+    "song_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Array of song IDs in the playlist"
+    },
+    "is_public": {
+      "type": "boolean",
+      "default": true,
+      "description": "Whether the playlist is public"
+    }
+  },
+  "required": [
+    "name"
+  ]
+}

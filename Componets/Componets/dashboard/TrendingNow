@@ -1,0 +1,64 @@
+import React from "react";
+import { TrendingUp, Play, Pause } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
+
+export default function TrendingNow({ songs, onPlaySong, currentSong, isPlaying, isLoading }) {
+  if (isLoading) {
+    return (
+      <div className="glass-effect rounded-2xl p-6">
+        <h3 className="text-xl font-bold mb-6 flex items-center gap-2">
+          <TrendingUp className="w-6 h-6" />
+          Trending Now
+        </h3>
+        <div className="space-y-4">
+          {Array(4).fill(0).map((_, i) => (
+            <div key={i} className="flex items-center gap-4">
+              <Skeleton className="w-8 h-8" />
+              <Skeleton className="w-12 h-12 rounded-lg" />
+              <div className="flex-1">
+                <Skeleton className="h-4 w-32 mb-2" />
+                <Skeleton className="h-3 w-24" />
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="glass-effect rounded-2xl p-6">
+      <h3 className="text-xl font-bold mb-6 flex items-center gap-2">
+        <TrendingUp className="w-6 h-6 text-gradient" />
+        Trending Now
+      </h3>
+      <div className="space-y-3">
+        {songs.map((song, index) => (
+          <div
+            key={song.id}
+            className="group flex items-center gap-4 p-3 rounded-xl hover:bg-white/5 transition-all duration-300 cursor-pointer"
+            onClick={() => onPlaySong(song)}
+          >
+            <div className="w-8 h-8 flex items-center justify-center text-gradient font-bold text-lg">
+              #{index + 1}
+            </div>
+            <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-purple-600 to-pink-600 flex items-center justify-center relative">
+              <span className="text-lg">🎵</span>
+              <div className="absolute inset-0 bg-black/50 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                {currentSong?.id === song.id && isPlaying ? (
+                  <Pause className="w-4 h-4" />
+                ) : (
+                  <Play className="w-4 h-4 ml-0.5" />
+                )}
+              </div>
+            </div>
+            <div className="flex-1 min-w-0">
+              <h4 className="font-semibold truncate">{song.title}</h4>
+              <p className="text-gray-400 text-sm truncate">{song.artist}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}

@@ -1,0 +1,82 @@
+import React, { useState, useEffect } from 'react';
+import { Playlist } from '@/entities/all';
+import { Link } from 'react-router-dom';
+import { createPageUrl } from '@/utils';
+import { Music, Plus } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
+
+export default function Playlists() {
+    const [playlists, setPlaylists] = useState([]);
+    const [isLoading, setIsLoading] = useState(true);
+
+    useEffect(() => {
+        loadPlaylists();
+    }, []);
+
+    const loadPlaylists = async () => {
+        setIsLoading(true);
+        try {
+            const data = await Playlist.list('-created_date');
+            setPlaylists(data);
+        } catch (error) {
+            console.error("Error loading playlists:", error);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    if (isLoading) {
+        return (
+            <div className="p-6">
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-6">
+                    {Array(6).fill(0).map((_, i) => (
+                        <div key={i} className="space-y-3">
+                            <Skeleton className="aspect-square rounded-xl" />
+                            <Skeleton className="h-4 w-full" />
+                            <Skeleton className="h-3 w-3/4" />
+                        </div>
+                    ))}
+                </div>
+            </div>
+        )
+    }
+
+    return (
+        <div className="p-6">
+            <div className="flex items-center justify-between mb-8">
+                <div>
+                    <h1 className="text-3xl font-bold mb-2">Your Playlists</h1>
+                    <p className="text-gray-400">Collections of your favorite music</p>
+                </div>
+                <Link to={createPageUrl("CreatePlaylist")}>
+                    <Button className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 glow-purple">
+                        <Plus className="w-4 h-4 mr-2" />
+                        Create Playlist
+                    </Button>
+                </Link>
+            </div>
+
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-6">
+                {playlists.map(playlist => (
+                    <Link to={createPageUrl(`Playlist?id=${playlist.id}`)} key={playlist.id} className="group">
+                        <div className="relative aspect-square rounded-xl mb-4 overflow-hidden glass-effect">
+                            {playlist.cover_url ? (
+                                <img src={playlist.cover_url} alt={playlist.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                            ) : (
+                                <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-purple-900 to-pink-900">
+                                    <Music className="w-1/2 h-1/2 text-white/20" />
+                                </div>
+                            )}
+                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                        </div>
+                        <div>
+                            <h4 className="font-semibold truncate group-hover:text-purple-300 transition-colors">{playlist.name}</h4>
+                            <p className="text-gray-400 text-sm truncate">{playlist.description || "No description"}</p>
+                        </div>
+                    </Link>
+                ))}
+            </div>
+        </div>
+    )
+}

@@ -1,0 +1,178 @@
+import React, { createContext, useState, useRef, useEffect, useContext } from 'react';
+import { Song } from '@/entities/all';
+
+const PlayerContext = createContext();
+
+export const usePlayer = () => useContext(PlayerContext);
+
+export const PlayerProvider = ({ children }) => {
+  const [currentSong, setCurrentSong] = useState(null);
+  const [currentPlaylist, setCurrentPlaylist] = useState([]);
+  const [currentSongIndex, setCurrentSongIndex] = useState(-1);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const [volume, setVolume] = useState(0.8);
+  const [isShuffle, setIsShuffle] = useState(false);
+  const [isRepeat, setIsRepeat] = useState('none'); // 'none', 'one', 'all'
+
+  const audioRef = useRef(new Audio());
+
+  useEffect(() => {
+    const audio = audioRef.current;
+
+    const handleTimeUpdate = () => {
+      if (audio.duration) {
+        setProgress((audio.currentTime / audio.duration) * 100);
+      }
+    };
+
+    const handleEnded = () => {
+      playNext();
+    };
+
+    audio.addEventListener('timeupdate', handleTimeUpdate);
+    audio.addEventListener('ended', handleEnded);
+    audio.addEventListener('error', (e) => {
+      console.error("Audio Error:", e);
+      playNext(); // Try to play next song on error
+    });
+
+    return () => {
+      audio.removeEventListener('timeupdate', handleTimeUpdate);
+      audio.removeEventListener('ended', handleEnded);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (currentSong) {
+      // Using a placeholder URL as real audio files aren't available
+      const dummyAudioUrl = 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3';
+      audioRef.current.src = currentSong.audio_url || dummyAudioUrl;
+      if (isPlaying) {
+        audioRef.current.play().catch(e => console.error("Error playing audio:", e));
+      }
+    } else {
+      audioRef.current.pause();
+    }
+  }, [currentSong]);
+
+  useEffect(() => {
+    audioRef.current.volume = volume;
+  }, [volume]);
+
+  useEffect(() => {
+    if (currentSong) {
+        if (isPlaying) {
+            audioRef.current.play().catch(e => console.error("Error playing audio:", e));
+        } else {
+            audioRef.current.pause();
+        }
+    }
+  }, [isPlaying, currentSong]);
+
+  const playSong = (song, playlist = []) => {
+    setCurrentSong(song);
+    const newPlaylist = Array.isArray(playlist) && playlist.length > 0 ? playlist : [song];
+    setCurrentPlaylist(newPlaylist);
+    const songIndex = newPlaylist.findIndex(s => s.id === song.id);
+    setCurrentSongIndex(songIndex);
+    setIsPlaying(true);
+  };
+
+  const togglePlay = () => {
+    if (currentSong) {
+      setIsPlaying(!isPlaying);
+    }
+  };
+
+  const playNext = () => {
+    if (!currentSong || currentPlaylist.length === 0) return;
+
+    if (isRepeat === 'one') {
+        audioRef.current.currentTime = 0;
+        audioRef.current.play();
+        return;
+    }
+
+    let nextIndex;
+    if (isShuffle) {
+        nextIndex = Math.floor(Math.random() * currentPlaylist.length);
+        if (currentPlaylist.length > 1 && nextIndex === currentSongIndex) {
+            nextIndex = (currentSongIndex + 1) % currentPlaylist.length;
+        }
+    } else {
+        nextIndex = currentSongIndex + 1;
+    }
+
+    if (nextIndex >= currentPlaylist.length) {
+        if (isRepeat === 'all') {
+            nextIndex = 0;
+        } else {
+            setIsPlaying(false);
+            return;
+        }
+    }
+
+    setCurrentSongIndex(nextIndex);
+    setCurrentSong(currentPlaylist[nextIndex]);
+  };
+
+  const playPrev = () => {
+    if (!currentSong || audioRef.current.currentTime > 3) {
+        audioRef.current.currentTime = 0;
+        return;
+    }
+
+    let prevIndex;
+    if (isShuffle) {
+        prevIndex = Math.floor(Math.random() * currentPlaylist.length);
+        if (currentPlaylist.length > 1 && prevIndex === currentSongIndex) {
+            prevIndex = (currentSongIndex - 1 + currentPlaylist.length) % currentPlaylist.length;
+        }
+    } else {
+        prevIndex = currentSongIndex - 1;
+    }
+
+    if (prevIndex < 0) {
+        if(isRepeat === 'all') {
+            prevIndex = currentPlaylist.length - 1;
+        } else {
+            return;
+        }
+    }
+
+    setCurrentSongIndex(prevIndex);
+    setCurrentSong(currentPlaylist[prevIndex]);
+  };
+
+  const seek = (percentage) => {
+    if (currentSong && audioRef.current.duration) {
+      const newTime = (percentage / 100) * audioRef.current.duration;
+      audioRef.current.currentTime = newTime;
+    }
+  };
+
+  const value = {
+    currentSong,
+    isPlaying,
+    progress,
+    volume,
+    isShuffle,
+    isRepeat,
+    playSong,
+    togglePlay,
+    playNext,
+    playPrev,
+    seek,
+    setVolume,
+    setIsShuffle,
+    setIsRepeat,
+    audioRef: audioRef.current,
+  };
+
+  return (
+    <PlayerContext.Provider value={value}>
+      {children}
+    </PlayerContext.Provider>
+  );
+};

@@ -1,0 +1,81 @@
+
+import React, { useState, useEffect } from "react";
+import { Song, Playlist } from "@/entities/all";
+import { usePlayer } from "../components/player/PlayerContext";
+
+import FeaturedSection from "../components/dashboard/FeaturedSection";
+import RecentlyPlayed from "../components/dashboard/RecentlyPlayed";
+import TrendingNow from "../components/dashboard/TrendingNow";
+import QuickAccess from "../components/dashboard/QuickAccess";
+
+export default function Dashboard() {
+  const [songs, setSongs] = useState([]);
+  const [playlists, setPlaylists] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const { playSong, currentSong, isPlaying } = usePlayer();
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  const loadData = async () => {
+    setIsLoading(true);
+    try {
+      const [songsData, playlistsData] = await Promise.all([
+        Song.list("-created_date", 20),
+        Playlist.list("-created_date", 10)
+      ]);
+      setSongs(songsData);
+      setPlaylists(playlistsData);
+    } catch (error) {
+      console.error("Error loading data:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handlePlay = (song, playlist) => {
+    playSong(song, playlist);
+  };
+
+  return (
+    <div className="p-6 space-y-8">
+      {/* Welcome Section */}
+      <div className="text-center mb-12">
+        <h1 className="text-4xl font-bold mb-4">
+          Good <span className="text-gradient">Evening</span>
+        </h1>
+        <p className="text-gray-400 text-lg">What would you like to listen to today?</p>
+      </div>
+
+      {/* Quick Access */}
+      <QuickAccess playlists={playlists} onPlaySong={(song) => handlePlay(song, [])} />
+
+      {/* Featured Section */}
+      <FeaturedSection 
+        songs={songs} 
+        onPlaySong={(song) => handlePlay(song, songs)}
+        currentSong={currentSong}
+        isPlaying={isPlaying}
+      />
+
+      {/* Main Content Grid */}
+      <div className="grid lg:grid-cols-2 gap-8">
+        <RecentlyPlayed 
+          songs={songs.slice(0, 6)}
+          onPlaySong={(song) => handlePlay(song, songs.slice(0,6))}
+          currentSong={currentSong}
+          isPlaying={isPlaying}
+          isLoading={isLoading}
+        />
+        <TrendingNow 
+          songs={songs.slice(6, 12)}
+          onPlaySong={(song) => handlePlay(song, songs.slice(6, 12))}
+          currentSong={currentSong}
+          isPlaying={isPlaying}
+          isLoading={isLoading}
+        />
+      </div>
+    </div>
+  );
+}

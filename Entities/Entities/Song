@@ -1,0 +1,42 @@
+{
+  "name": "Song",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string",
+      "description": "Song title"
+    },
+    "artist": {
+      "type": "string",
+      "description": "Artist name"
+    },
+    "album": {
+      "type": "string",
+      "description": "Album name"
+    },
+    "duration": {
+      "type": "number",
+      "description": "Duration in seconds"
+    },
+    "audio_url": {
+      "type": "string",
+      "description": "URL to the audio file"
+    },
+    "artwork_url": {
+      "type": "string",
+      "description": "URL to album artwork"
+    },
+    "genre": {
+      "type": "string",
+      "description": "Music genre"
+    },
+    "release_year": {
+      "type": "number",
+      "description": "Year of release"
+    }
+  },
+  "required": [
+    "title",
+    "artist"
+  ]
+}

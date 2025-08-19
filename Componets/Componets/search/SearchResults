@@ -1,0 +1,138 @@
+import React from "react";
+import { Play, Pause, Music } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
+
+export default function SearchResults({ query, results, isSearching, onPlaySong, currentSong, isPlaying }) {
+  if (isSearching) {
+    return (
+      <div className="space-y-6">
+        <div>
+          <Skeleton className="h-6 w-48 mb-4" />
+          <div className="space-y-3">
+            {Array(5).fill(0).map((_, i) => (
+              <div key={i} className="flex items-center gap-4">
+                <Skeleton className="w-12 h-12 rounded" />
+                <div className="flex-1">
+                  <Skeleton className="h-4 w-48 mb-2" />
+                  <Skeleton className="h-3 w-32" />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  const groupedResults = {
+    songs: results,
+    artists: [...new Set(results.map(s => s.artist))].slice(0, 6),
+    albums: [...new Set(results.map(s => s.album).filter(Boolean))].slice(0, 6)
+  };
+
+  return (
+    <div className="space-y-8">
+      <div className="mb-6">
+        <h2 className="text-xl font-bold mb-2">Search results for "{query}"</h2>
+        <p className="text-gray-400">{results.length} songs found</p>
+      </div>
+
+      {/* Top Results */}
+      {results.length > 0 && (
+        <div>
+          <h3 className="text-lg font-semibold mb-4">Top Results</h3>
+          <div className="grid lg:grid-cols-2 gap-6 mb-8">
+            {/* Best Match */}
+            <div 
+              className="glass-effect p-6 rounded-2xl cursor-pointer hover:bg-white/10 transition-all duration-300"
+              onClick={() => onPlaySong(results[0])}
+            >
+              <div className="flex items-center gap-4">
+                <div className="w-20 h-20 rounded-xl bg-gradient-to-br from-purple-600 to-pink-600 flex items-center justify-center text-2xl">
+                  🎵
+                </div>
+                <div className="flex-1">
+                  <h4 className="text-xl font-bold mb-1">{results[0].title}</h4>
+                  <p className="text-gray-400 mb-2">{results[0].artist}</p>
+                  <div className="flex items-center gap-2 text-sm text-gray-500">
+                    <Music className="w-4 h-4" />
+                    <span>Song</span>
+                  </div>
+                </div>
+                <div className="w-12 h-12 rounded-full bg-gradient-to-r from-purple-600 to-pink-600 flex items-center justify-center">
+                  {currentSong?.id === results[0].id && isPlaying ? (
+                    <Pause className="w-6 h-6" />
+                  ) : (
+                    <Play className="w-6 h-6 ml-1" />
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Artists */}
+            {groupedResults.artists.length > 0 && (
+              <div className="glass-effect p-6 rounded-2xl">
+                <h4 className="font-semibold mb-3">Artists</h4>
+                <div className="space-y-2">
+                  {groupedResults.artists.slice(0, 3).map((artist, index) => (
+                    <div key={index} className="flex items-center gap-3 p-2 rounded-lg hover:bg-white/5 cursor-pointer">
+                      <div className="w-8 h-8 rounded-full bg-gradient-to-r from-purple-600 to-pink-600 flex items-center justify-center text-sm">
+                        {artist[0]}
+                      </div>
+                      <span className="font-medium">{artist}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* All Songs */}
+      <div>
+        <h3 className="text-lg font-semibold mb-4">Songs</h3>
+        <div className="glass-effect rounded-2xl overflow-hidden">
+          {results.slice(0, 20).map((song, index) => (
+            <div
+              key={song.id}
+              className="group flex items-center gap-4 p-4 hover:bg-white/5 transition-all duration-300 cursor-pointer border-b border-white/5 last:border-b-0"
+              onClick={() => onPlaySong(song)}
+            >
+              <div className="w-8 flex items-center justify-center">
+                <span className="group-hover:hidden text-gray-400">{index + 1}</span>
+                <div className="hidden group-hover:block">
+                  {currentSong?.id === song.id && isPlaying ? (
+                    <Pause className="w-4 h-4" />
+                  ) : (
+                    <Play className="w-4 h-4 ml-0.5" />
+                  )}
+                </div>
+              </div>
+              <div className="w-12 h-12 rounded bg-gradient-to-br from-purple-600 to-pink-600 flex items-center justify-center">
+                🎵
+              </div>
+              <div className="flex-1 min-w-0">
+                <h4 className="font-semibold truncate">{song.title}</h4>
+                <p className="text-gray-400 text-sm truncate">{song.artist}</p>
+              </div>
+              <div className="text-gray-400 text-sm">
+                {Math.floor((song.duration || 180) / 60)}:{String((song.duration || 180) % 60).padStart(2, '0')}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {results.length === 0 && (
+        <div className="text-center py-12">
+          <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-r from-purple-600 to-pink-600 flex items-center justify-center text-2xl">
+            🔍
+          </div>
+          <h3 className="text-xl font-semibold mb-2">No results found</h3>
+          <p className="text-gray-400">Try searching for something else</p>
+        </div>
+      )}
+    </div>
+  );
+}

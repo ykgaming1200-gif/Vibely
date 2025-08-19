@@ -1,0 +1,42 @@
+import React from "react";
+import { TrendingUp, Search } from "lucide-react";
+
+export default function TrendingSearches({ onSearchClick }) {
+  const trendingTerms = [
+    "Pop Hits",
+    "Rock Classics",
+    "Electronic",
+    "Jazz",
+    "Hip Hop",
+    "Indie",
+    "Classical",
+    "R&B",
+    "Country",
+    "Alternative"
+  ];
+
+  return (
+    <div>
+      <h3 className="text-lg font-semibold mb-6 flex items-center gap-2">
+        <TrendingUp className="w-5 h-5 text-gradient" />
+        Trending Genres
+      </h3>
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+        {trendingTerms.map((term, index) => (
+          <div
+            key={index}
+            className="glass-effect p-6 rounded-xl cursor-pointer hover:bg-white/10 transition-all duration-300 hover:glow-purple group"
+            onClick={() => onSearchClick(term)}
+          >
+            <div className="text-center">
+              <div className="w-12 h-12 mx-auto mb-3 rounded-xl bg-gradient-to-br from-purple-600 to-pink-600 flex items-center justify-center">
+                <Search className="w-6 h-6 group-hover:scale-110 transition-transform" />
+              </div>
+              <h4 className="font-semibold">{term}</h4>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
